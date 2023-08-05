@@ -61,12 +61,9 @@ def get_chunks(l, n):
 
 def get_video_capture_and_frame_count(path):
   assert os.path.isfile(
-    path), "Couldn't find video file:" + path + ". Skipping video."
-  cap = None
-  if path:
-    cap = cv2.VideoCapture(path)
-
-  assert cap is not None, "Couldn't load video capture:" + path + ". Skipping video."
+      path), f"Couldn't find video file:{path}. Skipping video."
+  cap = cv2.VideoCapture(path) if path else None
+  assert cap is not None, f"Couldn't load video capture:{path}. Skipping video."
 
   # compute meta data of video
   if hasattr(cv2, 'cv'):
@@ -79,10 +76,7 @@ def get_video_capture_and_frame_count(path):
 
 def get_next_frame(cap):
   ret, frame = cap.read()
-  if not ret:
-    return None
-
-  return np.asarray(frame)
+  return None if not ret else np.asarray(frame)
 
 
 def compute_dense_optical_flow(prev_image, current_image):
@@ -144,15 +138,11 @@ def convert_videos_to_tfrecord(source_path, destination_path,
   """
   assert isinstance(n_frames_per_video, (int, str))
 
-  jpeg_encode = True if not dense_optical_flow else False
+  jpeg_encode = not dense_optical_flow
   if type(n_frames_per_video) is str:
     assert n_frames_per_video == "all"
 
-  if dense_optical_flow:
-    n_channels = 4
-  else:
-    n_channels = 3
-
+  n_channels = 4 if dense_optical_flow else 3
   if video_filenames is not None:
     filenames = video_filenames
   else:
@@ -160,7 +150,7 @@ def convert_videos_to_tfrecord(source_path, destination_path,
   if not filenames:
     raise RuntimeError('No data files found.')
 
-  print('Total videos found: ' + str(len(filenames)))
+  print(f'Total videos found: {len(filenames)}')
 
   filenames_split = list(get_chunks(filenames, n_videos_in_record))
   data = None
@@ -176,7 +166,7 @@ def convert_videos_to_tfrecord(source_path, destination_path,
       total_batch_number = 1
     else:
       total_batch_number = int(math.ceil(len(filenames) / n_videos_in_record))
-    print('Batch ' + str(i + 1) + '/' + str(total_batch_number) + " completed")
+    print(f'Batch {str(i + 1)}/{total_batch_number} completed')
     assert data.size != 0, 'something went wrong during video to numpy conversion'
     save_numpy_to_tfrecords(data, destination_path, 'batch_',
                             n_videos_in_record, i + 1, total_batch_number,

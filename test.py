@@ -77,9 +77,7 @@ def read_and_decode(filename_queue, n_frames, jpeg_encode):
     image = tf.reshape(image, [1, height, width, num_depth])
     image_seq.append(image)
 
-  image_seq = tf.concat(image_seq, 0)
-
-  return image_seq
+  return tf.concat(image_seq, 0)
 
 
 def get_number_of_records(filenames, n_frames, jpeg_encode=True):
@@ -92,11 +90,7 @@ def get_number_of_records(filenames, n_frames, jpeg_encode=True):
 
   num_examples = 0
 
-  if n_frames == 'all':
-    n_frames_in_test_video = 354
-  else:
-    n_frames_in_test_video = n_frames
-
+  n_frames_in_test_video = 354 if n_frames == 'all' else n_frames
   # create new session to determine batch_size for validation/test data
   with tf.Session() as sess_valid:
     filename_queue_val = tf.train.string_input_producer(filenames, num_epochs=1)
